@@ -54,12 +54,30 @@ io.on('connection', (socket) => {
     });
 
     socket.on('searchUser', () => {
-        let user = onlineUsers.get(socket.uuId);
+        // let user = onlineUsers.get(socket.uuId);
+        if (onlineUsers.size == 0) return;
         try {
             searchUsers(socket);
         }catch (err) {
             console.log('[ERROR] = ', err);
         }
+    });
+
+
+    socket.on('roomLeave', (data) => {
+        console.log('roomLeave');
+        if (onlineUsers.size == 0) return;
+        const userData = JSON.parse(data);
+        socket.leave(userData.roomId);
+        const user = onlineUsers.get(userData.uuId);
+        user.status = STATE_IDLE;
+    });
+
+    socket.on('sendMsg', (data) => {
+        console.log('sendMsg = ', data);
+        const userMessage = JSON.parse(data);
+        console.log('msg = ', userMessage.msg);
+        socket.broadcast.emit('chat message', data);
     });
 
     socket.on('disconnect', async () => {
