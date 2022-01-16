@@ -2,10 +2,10 @@ const express = require('express'); //requires express module
 const socket = require('socket.io'); //requires socket.io module
 const fs = require('fs');
 const app = express();
-var PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT);
 const io = socket(server);
-
+const multer = require("multer");
 
 // app.get('/', (req, res) => {
 //     res.sendFile(__dirname + '/index.html');
@@ -68,9 +68,13 @@ io.on('connection', (socket) => {
         console.log('roomLeave');
         if (onlineUsers.size == 0) return;
         const userData = JSON.parse(data);
-        socket.leave(userData.roomId);
+        if (userData) {
+            socket.leave(userData.roomId);
+        }
         const user = onlineUsers.get(userData.uuId);
-        user.status = STATE_IDLE;
+        if (user) {
+            user.status = STATE_IDLE;    
+        }
     });
 
     socket.on('sendMsg', (data) => {
@@ -149,6 +153,54 @@ function searchUsers(socket) {
         }
     });
 }
+
+// file size 5 MB 제한 
+const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 } });
+
+
+// app.get('/uploads/:upload', function(req, res) {
+//     var file = req.params.upload;
+//     console.log(file);
+//     var img = fs.readFileSync(__dirname + "/uploads/" + file);
+
+//     res.writeHead(200, {'Content-Type': 'image/png'});
+//     res.end(img, 'binary');
+// });
+
+// image라는 폴더경로로 node서버에 있는 uploads폴더 매핑
+// 클라이언트에서는 uploads로 접근못하고 image로 접근하도록
+app.use('/image', express.static('./uploads'));
+app.post('/uploadImg', upload.array('upload', 3), async (req, res, next) => {
+    try {
+        const roomId = req.body.roomId;
+        const uuId = req.body.uuId;
+        const date = req.body.date;
+        console.log('upload roomId = ', roomId);
+        console.log('upload uuId = ', uuId);
+        console.log('upload date = ', date);
+        var pathList = []
+        for (var img of req.files) {
+            console.log('upload path = ', img.path);
+            console.log('upload filename = ', img.filename);
+            pathList.push(img.filename);
+        }
+        if (req.files) {
+            console.log('upload pathList = ', pathList);
+            res.status(200).send({
+                state: 200,
+                imgPath: pathList
+            });
+            io.to(`${req.body.roomId}`).emit('chat image', {
+                uuId: req.body.uuId,
+                date: date,
+                imageNames: pathList
+            });
+        }
+    }catch(error) {
+        console.error(error);
+        next(error);
+    }    
+});
 
 // TEST CODE GOES HERE
 // (async function(){
