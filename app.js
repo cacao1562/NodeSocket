@@ -67,14 +67,22 @@ io.on('connection', (socket) => {
     socket.on('roomLeave', (data) => {
         console.log('roomLeave');
         if (onlineUsers.size == 0) return;
+
         const userData = JSON.parse(data);
         if (userData) {
+            const count = socket.adapter.rooms.get(userData.roomId).size;
+            if (count < 2) {
+                // image file delete
+            }
             socket.leave(userData.roomId);
+            const user = onlineUsers.get(userData.uuId);
+            if (user) {
+                user.status = STATE_IDLE;
+            }
+            socket.broadcast.emit('user leave');
+
         }
-        const user = onlineUsers.get(userData.uuId);
-        if (user) {
-            user.status = STATE_IDLE;    
-        }
+        
     });
 
     socket.on('sendMsg', (data) => {
