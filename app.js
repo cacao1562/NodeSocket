@@ -70,10 +70,11 @@ io.on('connection', (socket) => {
 
         const userData = JSON.parse(data);
         if (userData) {
-            const count = socket.adapter.rooms.get(userData.roomId).size;
-            if (count < 2) {
-                // image file delete
+            const room = socket.adapter.rooms.get(userData.roomId)
+            if (room) {
+                console.log('room user size = ', room.size);
             }
+            
             socket.leave(userData.roomId);
             const user = onlineUsers.get(userData.uuId);
             if (user) {
@@ -94,6 +95,7 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', async () => {
         console.log('user disconnected');
+        socket.broadcast.emit('user leave');
         onlineUsers.delete(socket.uuId)
     });
 
@@ -103,6 +105,7 @@ function searchUsers(socket) {
     return new Promise((resolve, reject) => {
         try {
             let user = onlineUsers.get(socket.uuId);
+            if (user == undefined) return
             user.status = STATE_FINDING
             let count = 0;
             var interval = setInterval(function() {
