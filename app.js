@@ -93,6 +93,13 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('chat message', data);
     });
 
+    socket.on('typing', (data) => {
+        socket.broadcast.emit('chat typing');
+    });
+    socket.on('not typing', (data) => {
+        socket.broadcast.emit('chat not typing');
+    });
+
     socket.on('disconnect', async () => {
         console.log('user disconnected');
         socket.broadcast.emit('user leave');
