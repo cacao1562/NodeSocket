@@ -93,11 +93,15 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('chat message', data);
     });
 
-    socket.on('typing', (data) => {
+    socket.on('typing', async () => {
         socket.broadcast.emit('chat typing');
     });
-    socket.on('not typing', (data) => {
+    socket.on('not typing', async () => {
         socket.broadcast.emit('chat not typing');
+    });
+    socket.on('send emoji', (data) => {
+        console.log('send emoji', data);
+        socket.broadcast.emit('chat emoji', data);
     });
 
     socket.on('disconnect', async () => {
