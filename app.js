@@ -51,6 +51,7 @@ io.on('connection', (socket) => {
         for (let [key, value] of onlineUsers) {
             console.log('>>> name = ', value.userName);
         }
+        io.emit('user count', onlineUsers.size);
     });
 
     socket.on('searchUser', () => {
@@ -108,6 +109,7 @@ io.on('connection', (socket) => {
         console.log('user disconnected');
         socket.broadcast.emit('user leave');
         onlineUsers.delete(socket.uuId)
+        io.emit('user count', onlineUsers.size);
     });
 
 });
